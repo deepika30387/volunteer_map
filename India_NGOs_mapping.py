@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[8]:
 
 
 import streamlit as st
@@ -13,6 +13,7 @@ from geopy.distance import geodesic
 import ast
 import datetime
 from geopy.geocoders import ArcGIS
+import urllib
 
 
 # In[ ]:
@@ -83,15 +84,51 @@ if user_location:
         st.sidebar.error("Location not found. Try adding a city name.")
 
 # 6. Populate Pins on the Map
+# for idx, row in df.iterrows():
+
+#     # Build the HTML popup, now including the date_display variable
+#     popup_html = f"""
+#     <div style="font-family: sans-serif; font-size: 13px; min-width: 200px;">
+#         <h4 style="margin: 0 0 5px 0; color: #1a73e8;">{row['NGO_name']}</h4>
+#         <p style="margin: 2px 0;"><b>Contact:</b> {row.get('Contact')}</p>
+#         <p style="margin: 2px 0;"><b>Phone:</b> {row.get('Contact_no')}</p>
+#         <p style="margin: 2px 0 10px 0;"><b>Address:</b> {row['Address']}</p>        
+#     </div>
+#     """
+
+#     folium.Marker(
+#         location=[row['latitude'], row['longitude']],
+#         popup=folium.Popup(popup_html, max_width=320),
+#         icon=folium.Icon(color='red', icon='heart')
+#     ).add_to(cluster)        
+
+# 6. Populate Pins on the Map
 for idx, row in df.iterrows():
 
-    # Build the HTML popup, now including the date_display variable
+    # URL-encode the specific NGO name for the error form
+    safe_ngo = urllib.parse.quote(str(row['NGO_name']))
+    error_url = f"https://docs.google.com/forms/d/e/1FAIpQLSdpVdoglgsxpPL8bageLbA260GFMPYz1llkju29ewmUqo9xNg/viewform?usp=pp_url&entry.2094537900={safe_ngo}"
+
+    # NEW: Generate the Google Maps Search URL using the exact coordinates
+    gmaps_url = f"https://www.google.com/maps/search/?api=1&query={row['latitude']},{row['longitude']}"
+
+    # Build the HTML popup with the new Google Maps button
     popup_html = f"""
     <div style="font-family: sans-serif; font-size: 13px; min-width: 200px;">
         <h4 style="margin: 0 0 5px 0; color: #1a73e8;">{row['NGO_name']}</h4>
         <p style="margin: 2px 0;"><b>Contact:</b> {row.get('Contact')}</p>
         <p style="margin: 2px 0;"><b>Phone:</b> {row.get('Contact_no')}</p>
-        <p style="margin: 2px 0 10px 0;"><b>Address:</b> {row['Address']}</p>        
+        <p style="margin: 2px 0 10px 0;"><b>Address:</b> {row['Address']}</p>
+
+        <!-- Google Maps Button (Styled in Google Blue) -->
+        <a href="{gmaps_url}" target="_blank" style="background-color: #4285F4; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; display: block; text-align: center; margin-top: 10px; font-weight: bold;">
+            📍 Open in Google Maps
+        </a>
+
+        <hr style="margin: 12px 0 8px 0; border: 0; border-top: 1px solid #eee;">
+        <a href="{error_url}" target="_blank" style="color: #d9534f; font-size: 11px; text-decoration: none;">
+            Report an error with this listing
+        </a>
     </div>
     """
 
@@ -99,7 +136,7 @@ for idx, row in df.iterrows():
         location=[row['latitude'], row['longitude']],
         popup=folium.Popup(popup_html, max_width=320),
         icon=folium.Icon(color='red', icon='heart')
-    ).add_to(cluster)        
+    ).add_to(cluster)
 
 
 # In[ ]:
